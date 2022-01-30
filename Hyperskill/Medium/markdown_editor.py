@@ -6,8 +6,8 @@ class Markdown:
 
     @classmethod
     def show_help(cls):
-        return ('Available formatters: plain bold italic header link inline-code'
-                'new-line ordered-list, unordered-list'
+        return ('Available formatters: plain bold italic header link'
+                ' inline-code new-line ordered-list unordered-list'
                 '\nSpecial commands: !help !done')
 
     @classmethod
@@ -20,9 +20,8 @@ class Markdown:
 
     @classmethod
     def save(cls) -> None:
-        file = open('output.md', 'w', encoding='utf-8')
-        file.writelines(cls.cache)
-        file.close
+        with open('output.md', 'w', encoding='utf-8') as md_doc:
+            md_doc.writelines(cls.cache)
 
 
 class List(Markdown):
