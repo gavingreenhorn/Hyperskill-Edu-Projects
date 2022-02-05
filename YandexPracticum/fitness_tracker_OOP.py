@@ -2,15 +2,20 @@ from dataclasses import dataclass, fields
 from typing import ClassVar
 
 
-class IncorrectArgsError(Exception):
+class InvalidArgsError(Exception):
     def __init__(self, w_out):
         self.message = f'Incorrect number of arguments passed for {w_out}'
         super().__init__(self.message)
 
 
+class InvalidWorkoutError(Exception):
+    def __init__(self, w_out):
+        self.message = f'Unknown workout type "{w_out}"'
+        super().__init__(self.message)
+
+
 @dataclass
 class InfoMessage:
-    """Информационное сообщение о тренировке."""
     training_type: str
     duration: float
     distance: float
@@ -101,11 +106,11 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    workout = WORKOUT_TYPES.get(workout_type)
-    if workout:
-        if len(fields(workout)) != len(data):
-            raise IncorrectArgsError(workout)
-        return workout(*data)
+    if workout := WORKOUT_TYPES.get(workout_type):
+        if len(fields(workout)) == len(data):
+            return workout(*data)
+        raise InvalidArgsError(workout)
+    raise InvalidWorkoutError(workout_type)
 
 
 def main(training: Training) -> None:
@@ -124,13 +129,12 @@ WORKOUT_TYPES: dict = {
 if __name__ == '__main__':
     packages: list = [
         ('SWM', [720, 1, 80, 25, 40]),
-        ('SWM', [720, 1, 80, 25]),          # faulty data: IncorrectArgsError
+        ('SWM', [720, 1, 80, 25]),          # InvalidArgsError
         ('RUN', [15000, 1, 75]),
         ('WLK', [9000, 1, 75, 180]),
-        ('FLY', [9000, 1, 50])              # faulty data: AssertionError
+        ('FLY', [9000, 1, 50])              # InvalidWorkoutError
     ]
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
-        assert training, f'Unknown workout type "{workout_type}"'
         main(training)
