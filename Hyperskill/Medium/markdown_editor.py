@@ -4,8 +4,8 @@ from typing import ClassVar
 class Markdown:
     cache: ClassVar[list] = []
 
-    @classmethod
-    def show_help(cls):
+    @staticmethod
+    def show_help() -> None:
         return ('Available formatters: plain bold italic header link'
                 ' inline-code new-line ordered-list unordered-list'
                 '\nSpecial commands: !help !done')
@@ -138,8 +138,11 @@ while (command := input('Choose a formatter: ')) != '!done':
         a_list = COMMANDS.get(command)(lines)
         a_list.add_lines()
     elif command == 'header':
-        while (level := int(input('Level: '))) not in range(1, 7):
-            print('The level should be within the range of 1 to 6')
+        try:
+            while (level := int(input('Level: '))) not in range(1, 7):
+                print('The level should be within the range of 1 to 6')
+        except ValueError as err:
+            raise Exception('You were supposed to enter a number') from err
         text = input('Text: ')
         header = COMMANDS.get(command)(level, text)
         header.add_line()
