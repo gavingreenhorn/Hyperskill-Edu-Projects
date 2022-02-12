@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup as beauty
 
 
 @dataclass
-class WebScrapper:
+class WebScraper:
     CACHE: ClassVar[dict] = dict()
     BASE_URL: ClassVar[str] = 'https://www.nature.com'
     PAGE_URL: ClassVar[str] = 'https://www.nature.com/nature/articles?sort=PubDate&year=2020'
@@ -62,8 +62,8 @@ n_of_pages = int(input())
 art_type = input()
 
 for page_num in range(1, n_of_pages + 1):
-    scrapper = WebScrapper(page_num, art_type)
-    scrapper.parse_articles()
-    scrapper.cache_content()
+    scraper = WebScraper(page_num, art_type)
+    scraper.parse_articles()
+    scraper.cache_content()
 
-WebScrapper.save_content()
+WebScraper.save_content()
