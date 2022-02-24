@@ -11,14 +11,19 @@ LANGUAGES = ["arabic", "german", "english", "spanish", "french", "hebrew", "japa
 parser = ArgumentParser(description="Prints translations and examples of a given word",
                         usage="Enter all necessary arguments in the following order: [lang_from] [lang_to] [word]")
 
-parser.add_argument('lang_from', type=str, help='Enter the language you want to translate from')
-parser.add_argument('lang_to', type=str, help='Enter the language you want to translate to')
+parser.add_argument('lang_from', type=str, help='Enter the language you want to translate from',
+                    choices=LANGUAGES)
+parser.add_argument('lang_to', type=str, help='Enter the language you want to translate to',
+                    choices=[*LANGUAGES, 'all'])
 parser.add_argument('word', type=str, help='Enter the word you want translated')
 
 args = parser.parse_args()
 lang_from = args.lang_from.lower()
 lang_to = args.lang_to.lower()
 word = args.word.lower()
+
+if lang_from == lang_to:
+    parser.error("Source and target language are the same.")
 
 BASE_URL = 'https://context.reverso.net/translation/'
 HEADERS = {'User-Agent': 'Mozilla/5.0'}
@@ -47,8 +52,7 @@ def cook_a_soup(s: Session, u: str, ss: SoupStrainer):
         sys.exit()
     except HTTPError:
         print(f'Sorry, unable to find {u.rsplit("/", 1)[-1]}')
-        sys.exit()
-        
+        sys.exit()       
 
 
 def get_text_data(soup: BeautifulSoup, limit: int, tag: str, attr: dict = None):
@@ -70,28 +74,19 @@ def read_log(log):
         print(line, end='')
 
 
-def run_translator(lang_from, lang_to, word):
-    with Session() as session:
-        with open(f'{word}.txt', 'w+', encoding='utf-8') as file:
-            if lang_to == 'all':
-                for lang_to in (lang for lang in LANGUAGES if lang != lang_from):
-                    trans_soup = get_soup(session, lang_from, lang_to, word, TRANSLATION_STRAINER)
-                    ex_soup = get_soup(session, lang_from, lang_to, word, EXAMPLE_STRAINER)
-                    trans_data = get_text_data(trans_soup, 1, 'a')
-                    ex_data = get_text_data(ex_soup, 2, 'span', {'class': 'text'})
-                    log_output(file, lang_to, trans_data, ex_data)
-            else:
+with Session() as session:
+    with open(f'{word}.txt', 'w+', encoding='utf-8') as file:
+        if lang_to == 'all':
+            for lang_to in (lang for lang in LANGUAGES if lang != lang_from):
                 trans_soup = get_soup(session, lang_from, lang_to, word, TRANSLATION_STRAINER)
                 ex_soup = get_soup(session, lang_from, lang_to, word, EXAMPLE_STRAINER)
-                trans_data = get_text_data(trans_soup, 5, 'a')
-                ex_data = get_text_data(ex_soup, 10, 'span', {'class': 'text'})
+                trans_data = get_text_data(trans_soup, 1, 'a')
+                ex_data = get_text_data(ex_soup, 2, 'span', {'class': 'text'})
                 log_output(file, lang_to, trans_data, ex_data)
-            read_log(file)
-
-
-if lang_from not in LANGUAGES:
-    print(f"Sorry, the program doesn't support {lang_from}")
-elif lang_to not in [*LANGUAGES, 'all']:
-    print(f"Sorry, the program doesn't support {lang_to}")
-else:
-    run_translator(lang_from, lang_to, word)
+        else:
+            trans_soup = get_soup(session, lang_from, lang_to, word, TRANSLATION_STRAINER)
+            ex_soup = get_soup(session, lang_from, lang_to, word, EXAMPLE_STRAINER)
+            trans_data = get_text_data(trans_soup, 5, 'a')
+            ex_data = get_text_data(ex_soup, 10, 'span', {'class': 'text'})
+            log_output(file, lang_to, trans_data, ex_data)
+        read_log(file)
