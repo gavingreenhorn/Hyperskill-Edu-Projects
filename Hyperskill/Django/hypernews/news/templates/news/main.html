@@ -1,0 +1,19 @@
+{% extends "news/base.html" %}
+
+{% block body %}
+  <h2>Hyper news</h2>
+  <form method="get" action="/news/">
+    <label> Search
+      <input name="q">
+    </label>
+  </form>
+  {% for date, body in data %}
+  <h4>{{ date }}</h4>
+  <ul>
+    {% for post in body %}
+    <li><a href="/news/{{ post.link }}/">{{ post.title }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+<a href="/news/create/">Create</a>
+{% endblock %}
