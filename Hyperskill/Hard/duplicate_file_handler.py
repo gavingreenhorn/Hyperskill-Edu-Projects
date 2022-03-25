@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import sys
 import re
@@ -12,6 +13,11 @@ class MyArgumentParser(ArgumentParser):
         print(message)
         sys.exit()
 
+
+logging.basicConfig(filename='duplicates.log',
+                                   level=logging.INFO,
+                                   format='[%(asctime)s] ::: %(message)s',
+                                   datefmt='%d/%m/%Y %I:%M:%S %p')
 
 parser = MyArgumentParser()
 parser.add_argument('root', type=str)
@@ -34,11 +40,12 @@ def get_file_sizes(root_dir, pattern):
         for f in files:
             if pattern.match(f):
                 path = os.path.join(root, f)
-                md = hashlib.md5()
-                with open(path, mode='rb') as fh:
-                    md.update(fh.read())
-                size = os.path.getsize(path)
-                by_size[size].append((md.hexdigest(), path))
+                if os.access(path, os.R_OK):
+                    md = hashlib.md5()
+                    with open(path, mode='rb') as fh:
+                        md.update(fh.read())
+                    size = os.path.getsize(path)
+                    by_size[size].append((md.hexdigest(), path))
     return by_size
 
 
@@ -68,7 +75,7 @@ def get_duplicates(hash_table):
 
 
 def enumerate_duplicates(size, paths, count_from):
-    enumeration = enumerate(paths, count_from)
+    enumeration = list(enumerate(paths, count_from))
     for file_ref in enumeration:
         duplicates_list.append((size, *file_ref))
     return [f'{count}. {path}' for count, path in enumeration]
@@ -95,6 +102,7 @@ def remove_duplicates(duplicates, inp_nums):
             if num in inp_nums:
                 freed_total += size
                 os.remove(path)
+                logging.info(f'Removed ::: {path}')
     return freed_total
 
 
@@ -118,8 +126,10 @@ check_dup = prompt('Check for duplicates?', {'yes', 'no'})
 if check_dup == 'yes':
     duplicates_table = get_hash_table(size_dict)
     printer(duplicates_table, reverse, print_hash=True)
-    delete = prompt('Delete files?', {'yes', 'no'})
-    if delete == 'yes':
+    if duplicates_list:
+        logging.info(f'Found ::: {os.linesep}{os.linesep.join(dup[2] for dup in duplicates_list)}')
+        delete = prompt('Delete files?', {'yes', 'no'})
+    if delete and delete == 'yes':
         while True:
             try:
                 nums = list(map(int, input('Enter file numbers to delete:\n').split()))
@@ -130,4 +140,4 @@ if check_dup == 'yes':
                     print('Wrong option\n')
                 else:
                     print(f'Total freed up space: {space} bytes')
-            break
+                    break
