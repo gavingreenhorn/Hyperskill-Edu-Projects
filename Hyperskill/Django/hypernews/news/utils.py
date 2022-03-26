@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-from random import randint, choice
+from random import randint
+from collections import defaultdict
 
 
 def get_json():
@@ -33,14 +34,12 @@ def group_by_date(pattern=None):
     with matching titles are sent to view function.
     """
     json_data = get_json()
-    by_date = {}
+    by_date = defaultdict(list)
     for obj in json_data:
         if (pattern and pattern in obj['title']) or not pattern:
             dt_str = obj['created']
             dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
             created = dt.strftime("%Y-%m-%d")
-            if created not in by_date:
-                by_date[created] = []
             temp_dict = {}
             for k, v in obj.items():
                 if k != 'created':
