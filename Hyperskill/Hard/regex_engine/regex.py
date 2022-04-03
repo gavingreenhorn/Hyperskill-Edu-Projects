@@ -3,14 +3,32 @@ Regex engine educational project.
 
 Supports . | ? | * | + | ^ | $ metacharacters.
 
-Example:
+If the script is being run as __main__
+regex pattern and text string are separated by "|" in user input.
+
+Input Examples:
+
     > '3\+3|3+3=6'
-    #  True
+    # True
     > '^apple$|apple pie'
     # False
 """
 
 import sys
+from argparse import ArgumentParser
+
+
+parser = ArgumentParser('Supply regex pattern and text string to be matched match')
+parser.add_argument('-p', '--pattern', type=str)
+parser.add_argument('-t', '--text', type=str)
+args, flags = parser.parse_known_args()
+
+
+class NonStringInputError(ValueError):
+    def __init__(self, **kwargs):
+        kwargs_str = '\n'.join(f'{k}: {type(v)}' for k, v in kwargs.items())
+        self.message = f'Arguments of incorrect type supplied:\n{kwargs_str}'
+        super().__init__(self.message)
  
 
 def match(regex, string):
@@ -95,7 +113,17 @@ def regex_engine(regex, string):
     @param regex: searched pattern
     @param string: string the pattern is searched in
     @return: return boolean value
+
+    >>> regex_engine('3\+3', '3+3=6')
+    True
+    >>> regex_engine('^apple$', 'apple pie')
+    False
+    >>> regex_engine(5, 5)
+    Traceback (most recent call last):
+    __name__.NonStringInputError
     """
+    if not isinstance(regex, str) and not isinstance(string, str):
+        raise NonStringInputError(pattern=regex, text=string)
     if not regex:
         return True
     elif not string:
@@ -108,11 +136,16 @@ def regex_engine(regex, string):
     
 
 def main():
-    r, s = input().split('|')
+    if args.pattern and args.text:
+        r, s = args.pattern, args.text
+    else:
+        r, s = input('Enter pattern|text to match: \n').split('|')
     print(regex_engine(r, s))
 
 
 sys.setrecursionlimit(10000)
 
 if __name__ == '__main__':
+    import doctest
+    doctest.testmod(optionflags=doctest.IGNORE_EXCEPTION_DETAIL) # exhaustive tests are implemented via unittest ./test_regex.py
     main()
