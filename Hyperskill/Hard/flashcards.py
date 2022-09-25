@@ -7,8 +7,6 @@ parser = ArgumentParser()
 parser.add_argument('--import_from', type=str)
 parser.add_argument('--export_to', type=str)
 
-args = parser.parse_args()
-
 
 @dataclass
 class Flashcard:
@@ -146,21 +144,21 @@ class Game:
             action = action.split()[0]
         getattr(self, '_' + action)()
 
-    def play(self, options):
-        if options.import_from:
-            self._load(options.import_from)
+    def play(self, import_from=None, export_to=None):
+        if import_from:
+            self._load(import_from)
         while (inp := self.input(
             'Input the action (add, remove, import, export, ask, '
             'exit, log, hardest card, reset stats):\n'
         )) != 'exit':
             self.get_action(inp)
         else:
-            if options.export_to:
-                self._save(options.export_to)
+            if export_to:
+                self._save(export_to)
             else:
                 self.print('Bye bye!')
 
 
 if __name__ == '__main__':
     game = Game()
-    game.play(args)
+    game.play(**vars(parser.parse_args()))
